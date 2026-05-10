@@ -4,272 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Zurich → Grindelwald · 9‑Day Bikepacking Guide + Live Map</title>
-    <!-- Leaflet CSS + JS -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --color-background-primary: #ffffff;
-            --color-background-secondary: #f8fafc;
-            --color-background-danger: #fee9e9;
-            --color-background-warning: #fff4e6;
-            --color-background-success: #edf7e8;
-            --color-background-info: #e6f4ff;
-            --color-text-primary: #1e2a3a;
-            --color-text-secondary: #4a5b6e;
-            --color-text-danger: #b91c1c;
-            --color-text-warning: #b45309;
-            --color-text-success: #2b6e1f;
-            --color-text-info: #0c6b9e;
-            --color-border-primary: #e2e8f0;
-            --color-border-secondary: #cbd5e1;
-            --color-border-tertiary: #e2edf2;
-            --border-radius-md: 12px;
-            --border-radius-lg: 20px;
-            --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, sans-serif;
-        }
-
-        body {
-            font-family: var(--font-sans);
-            background: #f1f5f9;
-            color: var(--color-text-primary);
-            padding: 1.25rem;
-            line-height: 1.5;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 28px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-            padding: 1.5rem 1.25rem 2rem 1.25rem;
-        }
-
-        /* components from previous (identical) */
-        .hero {
-            background: var(--color-background-secondary);
-            border: 1px solid var(--color-border-tertiary);
-            border-radius: var(--border-radius-lg);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .hero-title { font-size: 1.65rem; font-weight: 600; margin-bottom: 6px; }
-        .hero-sub { font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 1rem; border-left: 3px solid #7faa5e; padding-left: 0.75rem; }
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.65rem; }
-        .stat { background: white; border: 1px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 0.7rem 0.8rem; }
-        .stat-val { font-size: 1.35rem; font-weight: 600; }
-        .stat-lbl { font-size: 0.7rem; text-transform: uppercase; color: var(--color-text-secondary); margin-top: 4px; }
-        .section-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #3b6e4c; margin: 1.5rem 0 0.6rem 0; display: flex; align-items: center; gap: 6px; }
-        .alert-box { border-radius: var(--border-radius-md); padding: 0.9rem 1rem; margin-bottom: 0.9rem; border-left: 4px solid; }
-        .alert-red { background: #fee9e9; border-left-color: #e24b4a; }
-        .alert-amber { background: #fff4e6; border-left-color: #ef9f27; }
-        .alert-green { background: #edf7e8; border-left-color: #639922; }
-        .alert-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-        .alert-body { font-size: 0.8rem; line-height: 1.5; }
-
-        /* map container */
-        .map-card {
-            background: var(--color-background-secondary);
-            border-radius: var(--border-radius-lg);
-            border: 1px solid var(--color-border-tertiary);
-            padding: 1rem;
-            margin: 1.2rem 0 1.5rem;
-        }
-        .map-title {
-            font-weight: 600;
-            font-size: 0.95rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        .map-sub {
-            font-size: 0.7rem;
-            color: var(--color-text-secondary);
-            margin-bottom: 0.8rem;
-        }
-        #route-map {
-            height: 420px;
-            width: 100%;
-            border-radius: 16px;
-            border: 1px solid #cfdfe8;
-            background: #eef3f7;
-            z-index: 1;
-        }
-        .map-legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-top: 0.7rem;
-            font-size: 0.7rem;
-            color: #2c4c6e;
-        }
-        .legend-dot {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 20px;
-            margin-right: 5px;
-        }
-        .day-nav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 1.4rem;
-        }
-        .day-btn {
-            background: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            border-radius: 40px;
-            padding: 0.45rem 0.9rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .day-btn:hover { background: #e2e8f0; }
-        .day-btn.active { background: #1e2a3a; color: white; border-color: #1e2a3a; }
-        .day-btn.hard { border-color: #e24b4a; color: #b91c1c; }
-        .day-btn.hard.active { background: #e24b4a; color: white; }
-        .day-btn.easy { border-color: #378add; color: #195e8a; }
-        .day-btn.easy.active { background: #378add; color: white; }
-        .day-btn.epic { border-color: #639922; color: #2b6e1f; }
-        .day-btn.epic.active { background: #639922; color: white; }
-        .day-card { display: none; background: white; border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
-        .day-card.visible { display: block; }
-        .day-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--color-border-tertiary); }
-        .day-header-top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 8px; }
-        .day-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #4f6f8f; }
-        .day-name { font-size: 1.4rem; font-weight: 600; }
-        .day-metrics { display: flex; gap: 1.2rem; }
-        .metric-val { font-size: 1.1rem; font-weight: 600; }
-        .metric-lbl { font-size: 0.65rem; text-transform: uppercase; }
-        .metric.hard .metric-val { color: #e24b4a; }
-        .day-body { padding: 1rem 1.25rem; }
-        .section-title { font-size: 0.7rem; font-weight: 700; color: #3b6e4c; text-transform: uppercase; margin: 1.2rem 0 0.5rem 0; border-bottom: 1px solid var(--color-border-tertiary); padding-bottom: 5px; }
-        .day-body p { font-size: 0.85rem; line-height: 1.55; margin-bottom: 0.7rem; }
-        .tag { display: inline-block; font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 40px; background: #eef2f6; }
-        .camp-box, .warn-box, .info-box { border-radius: 12px; padding: 0.7rem 1rem; margin: 1rem 0; }
-        .camp-box { background: #edf7e8; border: 1px solid #c3e6b6; }
-        .warn-box { background: #fee9e9; border: 1px solid #f5c6cb; }
-        .info-box { background: #e6f4ff; border: 1px solid #b8e2f2; }
-        .star-box { background: #faf8f0; border: 1px solid #e9e0c7; border-radius: 12px; padding: 0.8rem 1rem; margin: 1rem 0; }
-        .divider { margin: 1.8rem 0 1rem; border-top: 1px solid var(--color-border-tertiary); }
-        .gear-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.7rem; margin: 1rem 0; }
-        .gear-cat { background: #f8fafc; border-radius: 12px; padding: 0.8rem; border: 1px solid #e9edf2; }
-        .gear-cat-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.6rem; }
-        .gear-cat ul { list-style: none; padding: 0; }
-        .gear-cat li { font-size: 0.73rem; padding: 0.3rem 0; border-bottom: 0.5px solid #e2e8f0; }
-        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; }
-
-        /* --- WEATHER SECTION STYLES (enhanced) --- */
-        .weather-section {
-            margin: 2rem 0 1.5rem;
-            background: linear-gradient(135deg, #e6f4ff 0%, #f0f7ff 100%);
-            border-radius: var(--border-radius-lg);
-            padding: 1.5rem;
-            border: 1px solid #b8daf2;
-            box-shadow: 0 4px 12px rgba(0,80,120,0.05);
-        }
-        .weather-title {
-            font-size: 1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            color: #1e2a3a;
-        }
-        .weather-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
-            gap: 0.7rem;
-        }
-        .weather-day-card {
-            background: white;
-            border-radius: var(--border-radius-md);
-            padding: 0.8rem 0.4rem 0.5rem;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border: 1px solid #dceaf2;
-            transition: transform 0.1s ease;
-            position: relative;
-        }
-        .weather-day-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 14px rgba(0,0,0,0.06);
-        }
-        .weather-source-badge {
-            position: absolute;
-            top: 4px;
-            right: 5px;
-            font-size: 0.55rem;
-            background: rgba(255,255,255,0.9);
-            border-radius: 10px;
-            padding: 0.1rem 0.35rem;
-            color: #2c4c6e;
-            font-weight: 500;
-            border: 1px solid #cbd5e1;
-        }
-        .weather-date {
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: #4a5b6e;
-            margin-bottom: 0.3rem;
-            margin-top: 0.1rem;
-        }
-        .weather-icon {
-            font-size: 1.8rem;
-            margin: 0.2rem 0;
-        }
-        .weather-temp {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #1e2a3a;
-            margin: 0.2rem 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.3rem;
-        }
-        .mood-emoji {
-            font-size: 0.9rem;
-            line-height: 1;
-        }
-        .weather-precip {
-            font-size: 0.6rem;
-            color: #0c6b9e;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-        }
-        .weather-precip span {
-            font-weight: 500;
-        }
-        .weather-loading {
-            color: #4a5b6e;
-            font-size: 0.8rem;
-            font-style: italic;
-        }
-        .weather-note {
-            margin-top: 1rem;
-            font-size: 0.65rem;
-            color: #4a5b6e;
-            background: rgba(255,255,255,0.7);
-            border-radius: 8px;
-            padding: 0.4rem 0.8rem;
-            display: inline-block;
-        }
-    </style>
+    <!-- Our styles -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="container">
@@ -287,7 +25,8 @@
         </div>
     </div>
 
-    <div class="section-label"><span class="icon-em">⚠️</span> Live SchweizMobil closures — verified May 2026</div>
+    <!-- Closures (static) -->
+    <div class="section-label"><span>⚠️</span> Live SchweizMobil closures — verified May 2026</div>
     <div class="alert-box alert-red">
         <div class="alert-title"><span>❌</span> Day 3 — Axenstrasse (Brunnen → Sisikon): CLOSED to cyclists</div>
         <div class="alert-body">Bikes banned since summer 2023. Take URJ lake boat Brunnen → Flüelen (bikes allowed, scenic) or 7-min train.</div>
@@ -301,7 +40,7 @@
         <div class="alert-body">Grosse Scheidegg (Day 9) road status confirm locally in early season.</div>
     </div>
 
-    <!-- ========== INTERACTIVE MAP SECTION ========== -->
+    <!-- Map -->
     <div class="map-card">
         <div class="map-title">🗺️ Swiss Alpine route · Day‑by‑day overview</div>
         <div class="map-sub">Click on markers to see daily distance & highlights · Blue line = main route · Dashed line = Lake Uri boat crossing</div>
@@ -314,30 +53,12 @@
         </div>
     </div>
 
+    <!-- Day navigator -->
     <div class="section-label">📅 Day-by-day navigator</div>
-    <div class="day-nav">
-        <button class="day-btn active" onclick="showDay(0)">D1 Moderate</button>
-        <button class="day-btn" onclick="showDay(1)">D2 Moderate</button>
-        <button class="day-btn" onclick="showDay(2)">D3 Moderate ⚠</button>
-        <button class="day-btn hard" onclick="showDay(3)">D4 Hard ★</button>
-        <button class="day-btn easy" onclick="showDay(4)">D5 Easy</button>
-        <button class="day-btn" onclick="showDay(5)">D6 Moderate</button>
-        <button class="day-btn" onclick="showDay(6)">D7 Moderate</button>
-        <button class="day-btn" onclick="showDay(7)">D8 Moderate</button>
-        <button class="day-btn epic" onclick="showDay(8)">D9 Epic loop</button>
-    </div>
+    <div class="day-nav" id="day-nav-buttons"></div>
+    <div id="day-cards-container"></div>
 
-    <!-- Day cards (compressed, same content as before but kept intact) -->
-    <div id="day-0" class="day-card visible"><div class="day-header"><div class="day-header-top"><div><div class="day-label">Day 1 · Moderate</div><div class="day-name">Into the forest cathedral</div><div class="day-route-sub">Zurich → Sihltal → Albis Ridge → Unterägeri</div></div><div class="day-metrics"><div class="metric"><div class="metric-val">58 km</div><div class="metric-lbl">Distance</div></div><div class="metric"><div class="metric-val">+950 m</div><div class="metric-lbl">Elevation</div></div></div></div></div><div class="day-body"><p>Leave Zurich via Wollishofen and enter the Sihltal river valley. Sihlwald forest, Albispass (789 m), descend to Lake Aegeri. Wild camp above lake.</p><div class="camp-box"><p>🏕️ Wild camp: Forest edge above Lake Aegeri east shore.</p></div></div></div>
-    <div id="day-1" class="day-card"><div class="day-header"><div class="day-header-top"><div><div class="day-label">Day 2 · Moderate</div><div class="day-name">Hidden lakes and Lake Lucerne</div><div class="day-route-sub">Unterägeri → Sattel → Lauerz → Schwyz → Morschach → Brunnen</div></div><div class="day-metrics"><div class="metric"><div class="metric-val">52 km</div><div class="metric-lbl">Distance</div></div><div class="metric"><div class="metric-val">+720 m</div><div class="metric-lbl">Elevation</div></div></div></div></div><div class="day-body"><p>Rothenthurm peatbog, Lauerzersee loop, Schwyz, Morschach panorama, descent to Brunnen.</p><div class="camp-box"><p>🏕️ Wild camp: Pine forest bench between Morschach and Brunnen.</p></div></div></div>
-    <div id="day-2" class="day-card"><div class="day-header"><div class="day-header-top"><div><div class="day-label">Day 3 · Moderate ⚠ CLOSURE</div><div class="day-name">Boat & secret valley</div><div class="day-route-sub">Brunnen → (boat) Flüelen → Altdorf → Maderanertal</div></div><div class="day-metrics"><div class="metric"><div class="metric-val">55 km</div><div class="metric-lbl">Distance + boat</div></div><div class="metric"><div class="metric-val">+700 m</div><div class="metric-lbl">Elevation</div></div></div></div></div><div class="day-body"><div class="warn-box"><p>❌ Axenstrasse closed: take URJ boat Brunnen→Flüelen.</p></div><p>Maderanertal – hidden valley, waterfalls, dead-end at Balmenschachen.</p><div class="camp-box"><p>🏕️ Wild camp: Valley end meadows at Balmenschachen.</p></div></div></div>
-    <div id="day-3" class="day-card"><div class="day-header" style="border-left:4px solid #e24b4a"><div class="day-header-top"><div><div class="day-label">Day 4 · HARDEST DAY ★</div><div class="day-name">Over Susten Pass</div><div class="day-route-sub">Maderanertal → Wassen → Sustenpass (2,224 m) → Innertkirchen</div></div><div class="day-metrics"><div class="metric hard"><div class="metric-val">48 km</div><div class="metric-lbl">Distance</div></div><div class="metric hard"><div class="metric-val">+1,950 m</div><div class="metric-lbl">Elevation</div></div></div></div></div><div class="day-body"><p>Steingletscher viewpoint, pass summit 2,224 m, epic descent to Innertkirchen. Wild camp above Gadmen meadows.</p><div class="camp-box"><p>🏕️ Wild camp: Gadmen meadows above treeline.</p></div></div></div>
-    <div id="day-4" class="day-card"><div class="day-header" style="border-left:4px solid #378add"><div class="day-header-top"><div><div class="day-label">Day 5 · Easy — Recovery</div><div class="day-name">Aare Gorge & Brienz</div><div class="day-route-sub">Innertkirchen → Meiringen → Aare Gorge → Brienz</div></div><div class="day-metrics"><div class="metric easy"><div class="metric-val">32 km</div><div class="metric-lbl">Distance</div></div><div class="metric easy"><div class="metric-val">+320 m</div><div class="metric-lbl">Elevation</div></div></div></div></div><div class="day-body"><p>Aareschlucht, Reichenbach Falls, Lake Brienz turquoise water. Wild camp east shore above Brienz.</p><div class="star-box"><div class="star-label">★ Best camp of trip</div><div class="star-body">Stechelberg, Lauterbrunnen valley (Day 7)</div></div></div></div>
-    <div id="day-5" class="day-card"><div class="day-header"><div class="day-header-top"><div><div class="day-label">Day 6 · Moderate</div><div class="day-name">Two lakes: Brienz → Thun</div><div class="day-route-sub">Brienz → Giessbach → Lake Brienz south → Interlaken → Lake Thun → Leissigen</div></div><div class="day-metrics"><div class="metric"><div class="metric-val">60 km</div><div class="metric-lbl">Distance</div></div><div class="metric"><div class="metric-val">+580 m</div><div class="metric-lbl">Elevation</div></div></div></div></div><div class="day-body"><p>Giessbach Falls, quiet south shore, Interlaken, Lake Thun east shore to Leissigen. Wild camp above Leissigen.</p></div></div>
-    <div id="day-6" class="day-card"><div class="day-header"><div class="day-header-top"><div><div class="day-label">Day 7 · Moderate</div><div class="day-name">Valley of 72 waterfalls</div><div class="day-route-sub">Leissigen → Interlaken → Lauterbrunnen → Stechelberg</div></div><div class="day-metrics"><div class="metric"><div class="metric-val">52 km</div><div class="metric-lbl">Distance</div></div><div class="metric"><div class="metric-val">+640 m</div><div class="metric-lbl">Elevation</div></div></div></div></div><div class="day-body"><p>Lauterbrunnen valley, Staubbachfall, Trümmelbachfälle, road end at Stechelberg – best camp of the trip.</p><div class="camp-box"><p>🏕️ ★ BEST CAMP: Stechelberg valley end, 18 waterfalls, alpine zone.</p></div></div></div>
-    <div id="day-7" class="day-card"><div class="day-header"><div class="day-header-top"><div><div class="day-label">Day 8 · Moderate</div><div class="day-name">The Eiger arrives</div><div class="day-route-sub">Stechelberg → Lauterbrunnen → Zweilütschinen → Grindelwald</div></div><div class="day-metrics"><div class="metric"><div class="metric-val">38 km</div><div class="metric-lbl">Distance</div></div><div class="metric"><div class="metric-val">+900 m</div><div class="metric-lbl">Elevation</div></div></div></div></div><div class="day-body"><p>Return through valley, then climb to Grindelwald basin – first sight of Eiger north face. Camp at Gletscherdorf.</p></div></div>
-    <div id="day-8" class="day-card"><div class="day-header" style="border-left:4px solid #639922"><div class="day-header-top"><div><div class="day-label">Day 9 · Grand finale — Epic loop</div><div class="day-name">Grosse Scheidegg (no‑car gravel)</div><div class="day-route-sub">Grindelwald → Grosse Scheidegg (1,962 m) → return</div></div><div class="day-metrics"><div class="metric epic"><div class="metric-val">28 km</div><div class="metric-lbl">Loop dist.</div></div><div class="metric epic"><div class="metric-val">+740 m</div><div class="metric-lbl">Elevation</div></div></div></div></div><div class="day-body"><div class="info-box"><p>🚫 No private cars – only cyclists and PostBus. Compacted gravel, perfect finale.</p></div><p>Views of Wetterhorn and Eiger massif, marmots, Berghaus since 1859. Return to Grindelwald.</p><div class="info-box"><p>🚆 Departure: Grindelwald → Interlaken → Bern → Zurich. Bike day pass CHF ~18.</p></div></div></div>
-
+    <!-- Gear -->
     <hr class="divider">
     <div class="section-label">🎒 Essential gear — Swiss alpine bikepacking</div>
     <div class="gear-grid">
@@ -347,238 +68,17 @@
         <div class="gear-cat"><div class="gear-cat-title">Navigation & safety</div><ul><li>Komoot premium / Swisstopo offline</li><li>20,000 mAh powerbank</li><li>Garmin inReach (Day 4)</li><li>Travel insurance + EHIC</li></ul></div>
     </div>
 
-    <!-- ========== WEATHER FORECAST SECTION (enhanced) ========== -->
+    <!-- Weather section (populated by JS) -->
     <div class="weather-section" id="weather-section">
-        <div class="weather-title">
-            <span>🌦️</span> Interlaken Region · May 21–31 outlook
-        </div>
-        <div id="weather-container" class="weather-grid">
-            <div class="weather-loading">Loading forecast…</div>
-        </div>
+        <div class="weather-title"><span>🌦️</span> Interlaken Region · May 21–31 outlook</div>
+        <div id="weather-container" class="weather-grid"><div class="weather-loading">Loading forecast…</div></div>
         <div class="weather-note" id="weather-note"></div>
     </div>
-
 </div>
 
-<script>
-    // ---------- DAY NAVIGATION (unchanged) ----------
-    function showDay(i) {
-        document.querySelectorAll('.day-card').forEach((card, idx) => {
-            card.classList.toggle('visible', idx === i);
-        });
-        document.querySelectorAll('.day-btn').forEach((btn, idx) => {
-            btn.classList.toggle('active', idx === i);
-        });
-    }
-
-    // ---------- INTERACTIVE MAP ----------
-    const map = L.map('route-map').setView([46.75, 8.35], 8.2);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & CartoDB',
-        subdomains: 'abcd',
-        maxZoom: 14,
-        minZoom: 7
-    }).addTo(map);
-
-    // approximate route coordinates (main pass points, using actual Swiss towns and passes)
-    const routePoints = [
-        [47.3769, 8.5417], // Zurich HB
-        [47.2800, 8.5400], // Sihlwald area
-        [47.2100, 8.5500], // Albispass region
-        [47.1406, 8.5844], // Unterägeri
-        [47.0700, 8.6500], // Rothenthurm
-        [46.9980, 8.6050], // Brunnen
-        // Boat crossing: Brunnen to Flüelen (dashed line separate)
-        [46.9024, 8.6241], // Flüelen
-        [46.8800, 8.6700], // Altdorf
-        [46.8000, 8.6900], // Amsteg / Maderanertal start
-        [46.7720, 8.7000], // Balmenschachen (Maderanertal end)
-        [46.7300, 8.6000], // Wassen
-        [46.7400, 8.4540], // Sustenpass summit (2,224m)
-        [46.7000, 8.2350], // Innertkirchen
-        [46.7540, 8.0380], // Brienz
-        [46.7000, 7.9200], // Interlaken
-        [46.6560, 7.7750], // Leissigen
-        [46.6200, 7.8000], // Interlaken again
-        [46.5950, 7.9100], // Lauterbrunnen
-        [46.5540, 7.9000], // Stechelberg
-        [46.6240, 8.0340], // Grindelwald
-        [46.6580, 8.1040]  // Grosse Scheidegg (final loop summit)
-    ];
-
-    // Draw main polyline (Grindelwald outward, with return to Grindelwald after Scheidegg loop)
-    const mainPolyline = L.polyline(routePoints, { color: '#2c7ab1', weight: 4, opacity: 0.8, smoothFactor: 1.5 }).addTo(map);
-    
-    // Dashed line for boat crossing Brunnen (46.9980,8.6053) to Flüelen (46.9024,8.6241)
-    const boatPoints = [[46.9980, 8.6053], [46.9024, 8.6241]];
-    L.polyline(boatPoints, { color: '#f5a623', weight: 3, dashArray: '8, 8', opacity: 0.9 }).addTo(map);
-    
-    // Day markers with popups (distance and highlights)
-    const dayStops = [
-        { lat: 47.3769, lng: 8.5417, day: 1, name: "Zurich start", dist: "0 km", info: "Departure from Zurich HB" },
-        { lat: 47.1406, lng: 8.5844, day: 1, name: "Unterägeri", dist: "58 km (Day 1)", info: "Lake Aegeri, wild camp nearby" },
-        { lat: 46.9980, lng: 8.6053, day: 2, name: "Brunnen", dist: "110 km cumulative", info: "End of Day 2 · Lake Lucerne shore" },
-        { lat: 46.9024, lng: 8.6241, day: 3, name: "Flüelen (boat arrival)", dist: "Day 3 · +55 km (boat incl.)", info: "After Axenstrasse closure alternate" },
-        { lat: 46.7720, lng: 8.7000, day: 3, name: "Maderanertal end", dist: "Day 3 total ~55 km", info: "Wild camp at valley dead end" },
-        { lat: 46.7400, lng: 8.4540, day: 4, name: "Sustenpass (2,224 m)", dist: "Day 4 · 48 km, +1,950m", info: "Hardest day, Steingletscher viewpoint" },
-        { lat: 46.7000, lng: 8.2350, day: 4, name: "Innertkirchen", dist: "Day 4 finish", info: "Base of Susten descent" },
-        { lat: 46.7540, lng: 8.0380, day: 5, name: "Brienz", dist: "Day 5 · 32 km (recovery)", info: "Turquoise lake, Aare Gorge" },
-        { lat: 46.6560, lng: 7.7750, day: 6, name: "Leissigen", dist: "Day 6 · 60 km", info: "Lake Thun, wild camp above" },
-        { lat: 46.5540, lng: 7.9000, day: 7, name: "Stechelberg", dist: "Day 7 · 52 km", info: "★ Best camp: 72 waterfalls, vertical cliffs" },
-        { lat: 46.6240, lng: 8.0340, day: 8, name: "Grindelwald", dist: "Day 8 · 38 km", info: "Eiger north face, Camping Gletscherdorf" },
-        { lat: 46.6580, lng: 8.1040, day: 9, name: "Grosse Scheidegg", dist: "Day 9 · 28 km loop", info: "No-car gravel pass, 1,962m, epic finale" }
-    ];
-
-    dayStops.forEach(stop => {
-        let markerColor = stop.day === 4 ? '#e24b4a' : (stop.day === 9 ? '#639922' : '#2c7ab1');
-        let markerHtml = L.divIcon({ html: `<div style="background:${markerColor}; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 0 1px #333;"></div>`, iconSize: [12,12], className: 'custom-marker' });
-        let marker = L.marker([stop.lat, stop.lng], { icon: markerHtml }).addTo(map);
-        marker.bindPopup(`
-            <strong>Day ${stop.day}</strong><br>
-            <b>${stop.name}</b><br>
-            📍 ${stop.dist}<br>
-            ${stop.info}
-        `);
-    });
-
-    // add a special marker for the hardest day (Sustenpass already included)
-    // also add a small marker for the boat info
-    L.marker([46.950, 8.615]).addTo(map).bindPopup("🚢 Lake Uri boat crossing (replaces closed Axenstrasse)").openPopup();
-
-    // add a note on map for the closure
-    L.circleMarker([46.97, 8.60], { radius: 5, color: '#e24b4a', fill: true, fillColor: '#e24b4a', fillOpacity: 0.7 }).addTo(map).bindPopup("⚠️ Axenstrasse closed to cyclists (Day 3) → use boat");
-
-    // adjust view to show full route
-    map.fitBounds(mainPolyline.getBounds().pad(0.15));
-
-    // ---------- WEATHER FORECAST LOGIC (enhanced) ----------
-    const weatherContainer = document.getElementById('weather-container');
-    const weatherNote = document.getElementById('weather-note');
-
-    function getWeatherEmoji(code) {
-        const weatherIcons = {
-            0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
-            45: '🌫️', 48: '🌫️',
-            51: '🌦️', 53: '🌦️', 55: '🌧️',
-            61: '🌧️', 63: '🌧️', 65: '🌧️',
-            71: '❄️', 73: '❄️', 75: '❄️',
-            77: '❄️',
-            80: '🌦️', 81: '🌧️', 82: '⛈️',
-            85: '❄️', 86: '❄️',
-            95: '⛈️', 96: '⛈️', 99: '⛈️'
-        };
-        return weatherIcons[code] || '🌈';
-    }
-
-    function getWeatherDescription(code) {
-        const desc = {
-            0: 'Clear', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
-            45: 'Fog', 48: 'Depositing rime fog',
-            51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
-            61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
-            71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow',
-            77: 'Snow grains',
-            80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers',
-            85: 'Slight snow showers', 86: 'Heavy snow showers',
-            95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
-        };
-        return desc[code] || 'Unknown';
-    }
-
-    function renderWeatherCards(dailyData, sourceType) {
-        weatherContainer.innerHTML = '';
-        if (!dailyData || !dailyData.time || dailyData.time.length === 0) {
-            weatherContainer.innerHTML = '<div class="weather-loading">No weather data available for this period.</div>';
-            return;
-        }
-
-        const times = dailyData.time;
-        const maxTemps = dailyData.temperature_2m_max;
-        const minTemps = dailyData.temperature_2m_min;
-        const precip = dailyData.precipitation_sum;
-        const codes = dailyData.weathercode;
-
-        for (let i = 0; i < times.length; i++) {
-            const date = new Date(times[i] + 'T00:00:00');
-            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-            const dayMonth = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-            const emoji = getWeatherEmoji(codes[i]);
-            const maxTemp = Math.round(maxTemps[i]);
-            const minTemp = Math.round(minTemps[i]);
-            const rain = precip[i] != null ? precip[i].toFixed(1) : '?';
-            const tempMood = maxTemp >= 16 ? '😃' : '😔';   // Above 16°C = good, else sad
-
-            const badgeText = sourceType === 'forecast' ? '📡 Live' : '📊 Avg';
-            const badgeTitle = sourceType === 'forecast' ? 'Live forecast' : 'Climate average';
-
-            const card = document.createElement('div');
-            card.className = 'weather-day-card';
-            card.innerHTML = `
-                <div class="weather-source-badge" title="${badgeTitle}">${badgeText}</div>
-                <div class="weather-date">${dayName}<br>${dayMonth}</div>
-                <div class="weather-icon" title="${getWeatherDescription(codes[i])}">${emoji}</div>
-                <div class="weather-temp">
-                    ${maxTemp}° / ${minTemp}°
-                    <span class="mood-emoji" title="${tempMood === '😃' ? 'Warm enough' : 'Chilly'}">${tempMood}</span>
-                </div>
-                <div class="weather-precip">💧 <span>${rain} mm</span></div>
-            `;
-            weatherContainer.appendChild(card);
-        }
-
-        // Update general note
-        let noteText = '';
-        if (sourceType === 'forecast') {
-            noteText = '📡 Live forecast data · Each card shows "Live" badge.';
-        } else if (sourceType === 'climate') {
-            noteText = '📊 Based on long‑term climate averages · Cards show "Avg" badge.';
-        }
-        weatherNote.textContent = noteText;
-    }
-
-    async function fetchWeather() {
-        const lat = 46.6863;
-        const lon = 7.8635;
-        const startDate = '2026-05-21';
-        const endDate = '2026-05-31';
-        const dailyParams = 'temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode';
-
-        // 1. Try live forecast
-        try {
-            const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=${dailyParams}&timezone=Europe/Zurich&start_date=${startDate}&end_date=${endDate}`;
-            const response = await fetch(forecastUrl);
-            const data = await response.json();
-
-            if (data && data.daily && data.daily.time && data.daily.time.length > 0 && !data.error) {
-                renderWeatherCards(data.daily, 'forecast');
-                return;
-            }
-        } catch (e) {
-            console.warn('Forecast fetch failed, trying climate averages...', e);
-        }
-
-        // 2. Fallback to climate (long-term averages)
-        try {
-            const climateUrl = `https://climate-api.open-meteo.com/v1/climate?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=${dailyParams}&timezone=Europe/Zurich`;
-            const response = await fetch(climateUrl);
-            const data = await response.json();
-
-            if (data && data.daily && data.daily.time && data.daily.time.length > 0) {
-                renderWeatherCards(data.daily, 'climate');
-                return;
-            }
-        } catch (e) {
-            console.error('Climate fetch failed', e);
-        }
-
-        // 3. Ultimate fallback
-        weatherContainer.innerHTML = '<div class="weather-loading">Could not load weather data. Please try again later.</div>';
-        weatherNote.textContent = '';
-    }
-
-    // Start weather fetch on page load
-    window.addEventListener('load', fetchWeather);
-</script>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Our scripts -->
+<script src="js/script.js"></script>
 </body>
 </html>
