@@ -74,7 +74,7 @@
         .alert-green { background: #edf7e8; border-left-color: #639922; }
         .alert-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
         .alert-body { font-size: 0.8rem; line-height: 1.5; }
-        
+
         /* map container */
         .map-card {
             background: var(--color-background-secondary);
@@ -169,6 +169,106 @@
         .gear-cat ul { list-style: none; padding: 0; }
         .gear-cat li { font-size: 0.73rem; padding: 0.3rem 0; border-bottom: 0.5px solid #e2e8f0; }
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; }
+
+        /* --- WEATHER SECTION STYLES (enhanced) --- */
+        .weather-section {
+            margin: 2rem 0 1.5rem;
+            background: linear-gradient(135deg, #e6f4ff 0%, #f0f7ff 100%);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            border: 1px solid #b8daf2;
+            box-shadow: 0 4px 12px rgba(0,80,120,0.05);
+        }
+        .weather-title {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #1e2a3a;
+        }
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+            gap: 0.7rem;
+        }
+        .weather-day-card {
+            background: white;
+            border-radius: var(--border-radius-md);
+            padding: 0.8rem 0.4rem 0.5rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #dceaf2;
+            transition: transform 0.1s ease;
+            position: relative;
+        }
+        .weather-day-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+        }
+        .weather-source-badge {
+            position: absolute;
+            top: 4px;
+            right: 5px;
+            font-size: 0.55rem;
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            padding: 0.1rem 0.35rem;
+            color: #2c4c6e;
+            font-weight: 500;
+            border: 1px solid #cbd5e1;
+        }
+        .weather-date {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #4a5b6e;
+            margin-bottom: 0.3rem;
+            margin-top: 0.1rem;
+        }
+        .weather-icon {
+            font-size: 1.8rem;
+            margin: 0.2rem 0;
+        }
+        .weather-temp {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1e2a3a;
+            margin: 0.2rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+        }
+        .mood-emoji {
+            font-size: 0.9rem;
+            line-height: 1;
+        }
+        .weather-precip {
+            font-size: 0.6rem;
+            color: #0c6b9e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+        .weather-precip span {
+            font-weight: 500;
+        }
+        .weather-loading {
+            color: #4a5b6e;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+        .weather-note {
+            margin-top: 1rem;
+            font-size: 0.65rem;
+            color: #4a5b6e;
+            background: rgba(255,255,255,0.7);
+            border-radius: 8px;
+            padding: 0.4rem 0.8rem;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -245,6 +345,17 @@
         <div class="gear-cat"><div class="gear-cat-title">Sleep system</div><ul><li>3-season sleeping bag</li><li>Inflatable mat R-value 3+</li><li>Ultralight tent or bivy</li></ul></div>
         <div class="gear-cat"><div class="gear-cat-title">Clothing</div><ul><li>Hardshell, insulated jacket</li><li>3× bib shorts, arm/knee warmers</li><li>Gloves (summer + light winter)</li></ul></div>
         <div class="gear-cat"><div class="gear-cat-title">Navigation & safety</div><ul><li>Komoot premium / Swisstopo offline</li><li>20,000 mAh powerbank</li><li>Garmin inReach (Day 4)</li><li>Travel insurance + EHIC</li></ul></div>
+    </div>
+
+    <!-- ========== WEATHER FORECAST SECTION (enhanced) ========== -->
+    <div class="weather-section" id="weather-section">
+        <div class="weather-title">
+            <span>🌦️</span> Interlaken Region · May 21–31 outlook
+        </div>
+        <div id="weather-container" class="weather-grid">
+            <div class="weather-loading">Loading forecast…</div>
+        </div>
+        <div class="weather-note" id="weather-note"></div>
     </div>
 
 </div>
@@ -339,6 +450,135 @@
 
     // adjust view to show full route
     map.fitBounds(mainPolyline.getBounds().pad(0.15));
+
+    // ---------- WEATHER FORECAST LOGIC (enhanced) ----------
+    const weatherContainer = document.getElementById('weather-container');
+    const weatherNote = document.getElementById('weather-note');
+
+    function getWeatherEmoji(code) {
+        const weatherIcons = {
+            0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+            45: '🌫️', 48: '🌫️',
+            51: '🌦️', 53: '🌦️', 55: '🌧️',
+            61: '🌧️', 63: '🌧️', 65: '🌧️',
+            71: '❄️', 73: '❄️', 75: '❄️',
+            77: '❄️',
+            80: '🌦️', 81: '🌧️', 82: '⛈️',
+            85: '❄️', 86: '❄️',
+            95: '⛈️', 96: '⛈️', 99: '⛈️'
+        };
+        return weatherIcons[code] || '🌈';
+    }
+
+    function getWeatherDescription(code) {
+        const desc = {
+            0: 'Clear', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+            45: 'Fog', 48: 'Depositing rime fog',
+            51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+            61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+            71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow',
+            77: 'Snow grains',
+            80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers',
+            85: 'Slight snow showers', 86: 'Heavy snow showers',
+            95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
+        };
+        return desc[code] || 'Unknown';
+    }
+
+    function renderWeatherCards(dailyData, sourceType) {
+        weatherContainer.innerHTML = '';
+        if (!dailyData || !dailyData.time || dailyData.time.length === 0) {
+            weatherContainer.innerHTML = '<div class="weather-loading">No weather data available for this period.</div>';
+            return;
+        }
+
+        const times = dailyData.time;
+        const maxTemps = dailyData.temperature_2m_max;
+        const minTemps = dailyData.temperature_2m_min;
+        const precip = dailyData.precipitation_sum;
+        const codes = dailyData.weathercode;
+
+        for (let i = 0; i < times.length; i++) {
+            const date = new Date(times[i] + 'T00:00:00');
+            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+            const dayMonth = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            const emoji = getWeatherEmoji(codes[i]);
+            const maxTemp = Math.round(maxTemps[i]);
+            const minTemp = Math.round(minTemps[i]);
+            const rain = precip[i] != null ? precip[i].toFixed(1) : '?';
+            const tempMood = maxTemp >= 16 ? '😃' : '😔';   // Above 16°C = good, else sad
+
+            const badgeText = sourceType === 'forecast' ? '📡 Live' : '📊 Avg';
+            const badgeTitle = sourceType === 'forecast' ? 'Live forecast' : 'Climate average';
+
+            const card = document.createElement('div');
+            card.className = 'weather-day-card';
+            card.innerHTML = `
+                <div class="weather-source-badge" title="${badgeTitle}">${badgeText}</div>
+                <div class="weather-date">${dayName}<br>${dayMonth}</div>
+                <div class="weather-icon" title="${getWeatherDescription(codes[i])}">${emoji}</div>
+                <div class="weather-temp">
+                    ${maxTemp}° / ${minTemp}°
+                    <span class="mood-emoji" title="${tempMood === '😃' ? 'Warm enough' : 'Chilly'}">${tempMood}</span>
+                </div>
+                <div class="weather-precip">💧 <span>${rain} mm</span></div>
+            `;
+            weatherContainer.appendChild(card);
+        }
+
+        // Update general note
+        let noteText = '';
+        if (sourceType === 'forecast') {
+            noteText = '📡 Live forecast data · Each card shows "Live" badge.';
+        } else if (sourceType === 'climate') {
+            noteText = '📊 Based on long‑term climate averages · Cards show "Avg" badge.';
+        }
+        weatherNote.textContent = noteText;
+    }
+
+    async function fetchWeather() {
+        const lat = 46.6863;
+        const lon = 7.8635;
+        const startDate = '2026-05-21';
+        const endDate = '2026-05-31';
+        const dailyParams = 'temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode';
+
+        // 1. Try live forecast
+        try {
+            const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=${dailyParams}&timezone=Europe/Zurich&start_date=${startDate}&end_date=${endDate}`;
+            const response = await fetch(forecastUrl);
+            const data = await response.json();
+
+            if (data && data.daily && data.daily.time && data.daily.time.length > 0 && !data.error) {
+                renderWeatherCards(data.daily, 'forecast');
+                return;
+            }
+        } catch (e) {
+            console.warn('Forecast fetch failed, trying climate averages...', e);
+        }
+
+        // 2. Fallback to climate (long-term averages)
+        try {
+            const climateUrl = `https://climate-api.open-meteo.com/v1/climate?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=${dailyParams}&timezone=Europe/Zurich`;
+            const response = await fetch(climateUrl);
+            const data = await response.json();
+
+            if (data && data.daily && data.daily.time && data.daily.time.length > 0) {
+                renderWeatherCards(data.daily, 'climate');
+                return;
+            }
+        } catch (e) {
+            console.error('Climate fetch failed', e);
+        }
+
+        // 3. Ultimate fallback
+        weatherContainer.innerHTML = '<div class="weather-loading">Could not load weather data. Please try again later.</div>';
+        weatherNote.textContent = '';
+    }
+
+    // Start weather fetch on page load
+    window.addEventListener('load', fetchWeather);
 </script>
 </body>
 </html>
