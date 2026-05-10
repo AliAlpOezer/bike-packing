@@ -208,3 +208,118 @@ body {
     margin-bottom: 0.8rem;
     display: block;
 }
+/* Gallery */
+.gallery-container {
+    position: relative;
+    margin: 1rem 0 0.5rem;
+}
+.gallery-viewport {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #f0f4f8;
+}
+.gallery-slide {
+    display: none;
+    width: 100%;
+}
+.gallery-image {
+    width: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    display: block;
+}
+.gallery-caption {
+    background: rgba(255,255,255,0.95);
+    padding: 0.8rem 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+.gallery-caption strong {
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 0.2rem;
+    color: #1e2a3a;
+}
+.gallery-caption p {
+    font-size: 0.8rem;
+    margin: 0;
+    color: #4a5b6e;
+}
+
+/* Arrows */
+.gallery-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.85);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    color: #1e2a3a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.gallery-arrow:hover {
+    background: white;
+}
+.gallery-arrow.left {
+    left: 8px;
+}
+.gallery-arrow.right {
+    right: 8px;
+}
+
+/* Dots */
+.gallery-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 0.6rem 0 0.4rem;
+}
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.dot.active {
+    background: #2c7ab1;
+}
+.weather-dot {
+    background: #f5a623;
+}
+.weather-dot.active {
+    background: #e67e22;
+}
+
+/* Inline forecast weather grid (within a day card) */
+.weather-forecast-inline .weather-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: #f8fcff;
+    border-radius: 8px;
+}
+.weather-forecast-inline .weather-day-card {
+    padding: 0.5rem 0.3rem;
+    font-size: 0.65rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.weather-forecast-inline .weather-date {
+    font-size: 0.6rem;
+    margin-bottom: 0.2rem;
+}
+.weather-forecast-inline .weather-icon { font-size: 1.3rem; }
+.weather-forecast-inline .weather-temp { font-size: 0.65rem; }
