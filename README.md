@@ -1,2 +1,2 @@
 # bike-packing
-with karli : )
+https://alialpoezer.github.io/bike-packing/ with karli : )
