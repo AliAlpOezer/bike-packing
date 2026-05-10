@@ -209,7 +209,7 @@ function initMap() {
     const boatPoints = [[46.9980, 8.6053], [46.9024, 8.6241]];
     L.polyline(boatPoints, { color: '#f5a623', weight: 3, dashArray: '8, 8', opacity: 0.9 }).addTo(map);
 
-    // Day markers with image thumbnails (updated to match)
+    // Day markers with image thumbnails
     const dayStops = [
         { lat: 47.3769, lng: 8.5417, day: 1, name: "Zurich start", dist: "0 km", info: "Departure from Zurich HB", image: "https://commons.wikimedia.org/wiki/Special:FilePath/Zürich.jpg?width=320" },
         { lat: 47.1406, lng: 8.5844, day: 1, name: "Unterägeri", dist: "58 km (Day 1)", info: "Lake Aegeri, wild camp nearby", image: "https://commons.wikimedia.org/wiki/Special:FilePath/Aegerisee.jpg?width=320" },
@@ -253,16 +253,106 @@ function initMap() {
 }
 
 // ========================
-// WEATHER (unchanged)
+// WEATHER FORECAST
 // ========================
 function getWeatherEmoji(code) {
-    const icons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',85:'❄️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
+    const icons = {
+        0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+        45: '🌫️', 48: '🌫️',
+        51: '🌦️', 53: '🌦️', 55: '🌧️',
+        61: '🌧️', 63: '🌧️', 65: '🌧️',
+        71: '❄️', 73: '❄️', 75: '❄️',
+        77: '❄️',
+        80: '🌦️', 81: '🌧️', 82: '⛈️',
+        85: '❄️', 86: '❄️',
+        95: '⛈️', 96: '⛈️', 99: '⛈️'
+    };
     return icons[code] || '🌈';
 }
+
 function getWeatherDesc(code) {
-    const desc = {0:'Clear',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Depositing rime fog',51:'Light drizzle',53:'Moderate drizzle',55:'Dense drizzle',61:'Slight rain',63:'Moderate rain',65:'Heavy rain',71:'Slight snow',73:'Moderate snow',75:'Heavy snow',77:'Snow grains',80:'Slight rain showers',81:'Moderate rain showers',82:'Violent rain showers',85:'Slight snow showers',86:'Heavy snow showers',95:'Thunderstorm',96:'Thunderstorm with slight hail',99:'Thunderstorm with heavy hail'};
+    const desc = {
+        0: 'Clear', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+        45: 'Fog', 48: 'Depositing rime fog',
+        51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+        61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+        71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow',
+        77: 'Snow grains',
+        80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers',
+        85: 'Slight snow showers', 86: 'Heavy snow showers',
+        95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
+    };
     return desc[code] || 'Unknown';
 }
-async function renderWeather(dailyData, source) { /* unchanged */ }
-async function fetchWeather() { /* unchanged */ }
-window.addEventListener('load', () => { buildDayCards(); initMap(); fetchWeather(); });
+
+async function renderWeather(dailyData, source) {
+    const container = document.getElementById('weather-container');
+    const note = document.getElementById('weather-note');
+    container.innerHTML = '';
+    if (!dailyData || !dailyData.time) {
+        container.innerHTML = '<div class="weather-loading">No data available.</div>';
+        return;
+    }
+
+    for (let i = 0; i < dailyData.time.length; i++) {
+        const date = new Date(dailyData.time[i] + 'T00:00:00');
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayMonth = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const emoji = getWeatherEmoji(dailyData.weathercode[i]);
+        const max = Math.round(dailyData.temperature_2m_max[i]);
+        const min = Math.round(dailyData.temperature_2m_min[i]);
+        const rain = dailyData.precipitation_sum[i] != null ? dailyData.precipitation_sum[i].toFixed(1) : '?';
+        const mood = max >= 16 ? '😃' : '😔';
+        const badgeText = source === 'forecast' ? '📡 Live' : '📊 Avg';
+        const badgeTitle = source === 'forecast' ? 'Live forecast' : 'Climate average';
+
+        const card = document.createElement('div');
+        card.className = 'weather-day-card';
+        card.innerHTML = `
+            <div class="weather-source-badge" title="${badgeTitle}">${badgeText}</div>
+            <div class="weather-date">${dayName}<br>${dayMonth}</div>
+            <div class="weather-icon" title="${getWeatherDesc(dailyData.weathercode[i])}">${emoji}</div>
+            <div class="weather-temp">${max}° / ${min}° <span class="mood-emoji">${mood}</span></div>
+            <div class="weather-precip">💧 <span>${rain} mm</span></div>
+        `;
+        container.appendChild(card);
+    }
+
+    note.textContent = source === 'forecast'
+        ? '📡 Live forecast data · Each card shows "Live" badge.'
+        : '📊 Based on long‑term climate averages · Cards show "Avg" badge.';
+}
+
+async function fetchWeather() {
+    const lat = 46.6863, lon = 7.8635;
+    const start = '2026-05-21', end = '2026-05-31';
+    const params = 'temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode';
+
+    try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=${params}&timezone=Europe/Zurich&start_date=${start}&end_date=${end}`);
+        const data = await res.json();
+        if (data?.daily?.time?.length && !data.error) return renderWeather(data.daily, 'forecast');
+    } catch (e) {
+        console.warn('Forecast fetch failed, trying climate averages...', e);
+    }
+
+    try {
+        const res = await fetch(`https://climate-api.open-meteo.com/v1/climate?latitude=${lat}&longitude=${lon}&start_date=${start}&end_date=${end}&daily=${params}&timezone=Europe/Zurich`);
+        const data = await res.json();
+        if (data?.daily?.time?.length) return renderWeather(data.daily, 'climate');
+    } catch (e) {
+        console.error('Climate fetch failed', e);
+    }
+
+    document.getElementById('weather-container').innerHTML = '<div class="weather-loading">Could not load weather data. Please try again later.</div>';
+    document.getElementById('weather-note').textContent = '';
+}
+
+// ========================
+// INIT
+// ========================
+window.addEventListener('load', () => {
+    buildDayCards();
+    initMap();
+    fetchWeather();
+});
